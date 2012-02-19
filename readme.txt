@@ -104,15 +104,15 @@ merge "mydump.rdd" keys with redis keys who match "*comment*" and "*article*", r
 exemple, move some keys from one redis instance to another one
 
 // save all keys of your choice
-./rdd "myprefix:*" -o "myprefix.rdd" -s "ip of redis instance 1" -p "port of redis instance 1"
+./rdd "myprefix:*" -o "keys.rdd" -s "ip of redis instance 1" -p "port of redis instance 1"
 
 // delete all keys from source redis
-./rdd "all.rdd" -o delete  -s "ip of redis instance 1" -p "port of redis instance 1"
+./rdd "keys.rdd" -o delete  -s "ip of redis instance 1" -p "port of redis instance 1"
 
 // filter keys from dump if need, here we delete "cache" temp keys
-./rdd "myprefix.rdd" -f "*cache*" -o "myprefix.rdd"
+./rdd "keys.rdd" -f "*cache*" -o "keys.rdd"
 
 // now save dump into redis instance 2
-./rdd "myprefix.rdd" -o insert -s "ip of redis instance 1" -p "port of redis instance 1"
+./rdd "keys.rdd" -o insert -s "ip of redis instance 1" -p "port of redis instance 1"
 
 -------------------------------------
