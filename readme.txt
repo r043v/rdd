@@ -23,7 +23,6 @@ this tool not use .rdb file ! i made my own file format, .rdd
 limitation ..
 
 not support for now TTL
-not support for now integer keys
 
 -------------------------------------
 
