@@ -113,6 +113,6 @@ exemple, move some keys from one redis instance to another one
 ./rdd "keys.rdd" -f "*cache*" -o "keys.rdd"
 
 // now save dump into redis instance 2
-./rdd "keys.rdd" -o insert -s "ip of redis instance 1" -p "port of redis instance 1"
+./rdd "keys.rdd" -o insert -s "ip of redis instance 2" -p "port of redis instance 2"
 
 -------------------------------------
