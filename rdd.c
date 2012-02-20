@@ -41,31 +41,33 @@ struct keynfo
 	char**data;
 };
 
-u32 rddAddKeys(char**rdd, u32 nbk, char**kkeys);
-u32 rddHasKey(char*rdd,char*name);
-char * keyCreate(char*name,u16 type, u32 nb, u32*dsize, char**data);
-u32 keyGetSize(char*k);
-char * rddGoToKey(char*rdd, u32 id);
-char ** rddGetAllKeys(char*rdd, u32*nb);
-void rddMerge(char**rdd,char*add);
 char * rddnew(void);
 u32 rddGetSize(char*rdd);
-char ** rddGetKeys(char*rdd, char**filter, u32 nbfilter, u32 method, u32*nb);
-char * rddRedis(redisContext*redis,char*filter);
+void rddMerge(char**rdd,char*add);
 u32 rddMatch(char**rdd, char**filter, u32 nbfilter);
 u32 rddFilter(char**rdd, char**filter, u32 nbfilter);
-void rddSave(char*rdd, char*fname);
-char * rddLoad(char*fname);
-u32 getType(char*t);
-const char * getTypeName(u16*type);
-u32 wildMatch(char* pat, char* str);
-u32 keyGetNfo(char*k,struct keynfo *nfo);
-void rddRedisConnect(redisContext ** rd, char*server, u32 port, u32 db, char * pass);
-void rddPrint(char*rdd,u32 verbose);
-void keyPrint(char*key);
 u32 rddRedisInsert(redisContext*rd,char*rdd);
 void rddRedisDelete(redisContext*rd,char*rdd);
 char * rddRedis(redisContext*rd,char*filter);
+char * rddGoToKey(char*rdd, u32 id);
+char ** rddGetAllKeys(char*rdd, u32*nb);
+char ** rddGetKeys(char*rdd, char**filter, u32 nbfilter, u32 method, u32*nb);
+u32 rddAddKeys(char**rdd, u32 nbk, char**kkeys);
+u32 rddHasKey(char*rdd,char*name);
+void rddSave(char*rdd, char*fname);
+char * rddLoad(char*fname);
+void rddPrint(char*rdd,u32 verbose);
+
+void rddRedisConnect(redisContext ** rd, char*server, u32 port, u32 db, char * pass);
+
+u32 keyGetNfo(char*k,struct keynfo *nfo);
+char * keyCreate(char*name,u16 type, u32 nb, u32*dsize, char**data);
+u32 keyGetSize(char*k);
+void keyPrint(char*key);
+
+u32 getType(char*t);
+const char * getTypeName(u16*type);
+u32 wildMatch(char* pat, char* str);
 
 static const ptrdiff_t kalign = 4;
 
@@ -88,40 +90,35 @@ const char * getTypeName(u16*type) // string, list, set, zset and hash
 		case 2: return "set"; break;
 		case 3: return "zset"; break;
 		case 4: return "hash"; break;
-		default: return "unknow"; break;
-	}; return ":)";
+	};		return "unknow";
 }
 
-
 //wilcard function come from here, http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
-u32 wildMatch(char* pat, char* str) {
-   char* s, *p;
-   u32 star = 0;
-
-loopStart:
-   for (s = str, p = pat; *s; ++s, ++p) {
-      switch (*p) {
-         case '?':
-            if (*s == '.') goto starCheck;
-            break;
-         case '*':
-            star = 1;
-            str = s, pat = p;
-            do { ++pat; } while (*pat == '*');
-            if (!*pat) return 1;
-            goto loopStart;
-         default:
-            if (*s != *p) goto starCheck;
-            break;
-      } /* endswitch */
-   } /* endfor */
-   while (*p == '*') ++p;
-   return (!*p);
-
-starCheck:
-   if (!star) return 0;
-   str++;
-   goto loopStart;
+u32 wildMatch(char* pat, char* str)
+{	char *s, *p; u32 star = 0;
+	loopStart:
+	for(s=str,p=pat ; *s ; ++s,++p)
+	{	switch(*p)
+		{	case '?':
+				if (*s == '.') goto starCheck;
+			break;
+			case '*':
+				star = 1;
+				str = s, pat = p;
+				do { ++pat; } while (*pat == '*');
+				if (!*pat) return 1;
+				goto loopStart;
+			default:
+				if (*s != *p) goto starCheck;
+			break;
+		}
+	}
+	while (*p == '*') ++p;
+	return (!*p);
+	starCheck:
+	if(!star) return 0;
+	str++;
+	goto loopStart;
 }
 
 u32 rddHasKey(char*rdd,char*name)
@@ -233,7 +230,7 @@ u32 rddFilter(char**rdd, char**filters, u32 nbfilters)
 	char ** keys = rddGetKeys(*rdd,filters,nbfilters,0, &nbkey);
 	char *out = rddnew();	
 	rddAddKeys(&out,nbkey,keys);
-	free(*rdd); *rdd=out;	
+	free(*rdd); free(keys); *rdd=out;	
 	return 1;
 }
 
@@ -243,7 +240,7 @@ u32 rddMatch(char**rdd, char**filters, u32 nbfilters)
 	char ** keys = rddGetKeys(*rdd,filters,nbfilters,1, &nbkey);
 	char *out = rddnew();	
 	rddAddKeys(&out,nbkey,keys);
-	free(*rdd); *rdd=out;	
+	free(*rdd); free(keys); *rdd=out;	
 	return 1;
 }
 
@@ -301,6 +298,7 @@ char * rddRedis(redisContext*rd,char*filter)
 	freeReplyObject(keys);
 	
 	rddAddKeys(&rdd, nbkey, rddkeys);
+	for(u32 n=0;n<nbkey;n++) free(rddkeys[n]); free(rddkeys); free(ktype);
 	return rdd;
 }
 
@@ -516,7 +514,7 @@ int main(int argc,char **argv)
 	int i=1, filterflag=0; // 0:input, 1:filter, 2:match
 	while(i < argc)
 	{	if(!strcmp(argv[i],"-h"))
-		{	printf("rdd'r 0.1\n\nusage:\t-h : show this help screen\n"); return 0;
+		{	printf("rdd 0.1\n\nusage:\t-h : show this help screen\n"); return 0;
 		}
 		
 		if(!strcmp(argv[i],"-s"))
@@ -557,6 +555,7 @@ int main(int argc,char **argv)
 		if(!filterflag)   { input[inputnb++] = argv[i++]; continue; }
 		if(filterflag==1) { filter[filternb++] = argv[i++]; continue; }
 		if(filterflag==2) { match[matchnb++] = argv[i++]; continue; }
+		i++;
 	}
 
 	if(inputnb == 0) // no input mean all redis keys
