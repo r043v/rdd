@@ -29,10 +29,7 @@ not support for now TTL
 know bugs ..
 
 not any, but i not made serious test :)
-it must be for now only some memory leak, nothing serious
 there are no check test .. so, a bad dump can crash
-
-but, hey this is an alpha ;)
 
 -------------------------------------
 
