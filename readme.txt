@@ -1,10 +1,11 @@
 -------------------------------------
---- redis dumper --- rdd --- 0.1a ---
+--- redis dumper --- rdd --- 0.2 ---
 -------------------------------------
 
-by r043v/dph  ...  noferov@gmail.com
+by r043v/dph  ...  noferov@gmail.com  ...  https://github.com/r043v/rdd/
 
-licenced under creative common cc-by-nc-sa
+This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+  http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 -------------------------------------
 
@@ -20,9 +21,11 @@ this tool not use .rdb file ! i made my own file format, .rdd
 
 -------------------------------------
 
-limitation ..
+changelog
 
-not support for now TTL
+0.2	add ttl support, save ttl with end unix timestamp value, will auto filter expired keys before output them anywhere.
+0.1	memory leak fix
+0.1a	initial release
 
 -------------------------------------
 
