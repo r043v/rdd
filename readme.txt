@@ -31,7 +31,6 @@ know bugs ..
 not any, but i not made serious test :)
 it must be for now only some memory leak, nothing serious
 there are no check test .. so, a bad dump can crash
-maybe list are rewrited in the inverse order, was not try in fact, give me a touch!
 
 but, hey this is an alpha ;)
 
