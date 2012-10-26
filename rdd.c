@@ -1,5 +1,5 @@
 /* rdd - redis database dumper
- * 0.2 release, by r043v/dph
+ * 0.3 release, by noferi mickaël (r043v/dph)
  * noferov@gmail.com
  * https://github.com/r043v/rdd/
  * 
@@ -144,7 +144,9 @@ u32 rddHasKey(char*rdd,char*name)
 }
 
 char * keyCreate(char*name,u16 type, u32 nb, u32 ttl, u32*dsize, char**data)
-{	u32 size = 16+nb*4; // magic,type,size,ttl,nbres,data size
+{	//printf("** key create\n\t[%s]\n\ttype [%u]\n\tnb [%u]\n\tttl [%u]\n",name,type,nb,ttl);
+  
+	u32 size = 16+nb*4; // magic,type,size,ttl,nbres,data size
 	u32*sizes = (u32*)malloc((nb+1)*4);
 	u32 tmp = strlen(name)+1; tmp = (tmp + (kalign - 1)) & -kalign;
 	
@@ -272,7 +274,7 @@ u32 rddTtl(char**rdd)
 		{	validk[nbvalid++] = keys[c];
 		}	free(nfo.data);
 	}
-	rddAddKeys(&out,nbvalid,validk);
+	rddAddKeys(&out,nbvalid,validk); free(validk);
 	free(*rdd); free(keys); *rdd=out;
 	return 1;
 }
@@ -367,7 +369,7 @@ void rddRedisDelete(redisContext*rd,char*rdd)
 	//printf("%i keys where removed from redis.\n",reply->integer);
 	
 	free(cargv);
-	free(cargl);	
+	free(cargl);
 	free(keys);
 }
 
@@ -551,6 +553,69 @@ void rddRedisConnect(redisContext ** rd, char*server, u32 port, u32 db, char * p
 	}
 }
 
+u32 rddRename(char**rdd,char*match,char*replace)
+{	if(*(u32*)*rdd != 0x42424242) return 0;
+	u32 nbkey, nbmatch=0, matchlen = strlen(match), replacelen = strlen(replace);
+	char ** keys = rddGetAllKeys(*rdd,&nbkey);
+	char *out = rddnew();
+	char **outk = (char**)malloc(nbkey*sizeof(char*));
+	char **matchk = (char**)malloc(nbkey*sizeof(char*));
+	struct keynfo nfo;
+	
+	for(u32 c=0;c<nbkey;c++)
+	{	keyGetNfo(keys[c],&nfo);
+//		printf("process key [%s] ",nfo.name);
+		char * pos = strstr(nfo.name,match);
+		if(!pos) // not match, simple copie
+		{	outk[c] = keys[c];
+//			printf("not match\n");
+		} else { // match, patch key name
+			char * name = nfo.name;
+//			printf("match\n");
+			u32  len = strlen(name);
+//			printf("name len : %u\n",len);
+			u32 nlen = (len-matchlen)+replacelen;
+//			printf("new name len : %u\n",nlen);
+			char * newName =  (char*)malloc(nlen+1);
+			//if(!newName) { printf("alloc error.\n"); return 0; }
+			char * nptr = newName;
+			u32 startlen = pos-name;
+//			printf("start len : %u, replace len : %u, matchlen : %u\n",startlen,replacelen,matchlen);
+			memcpy(nptr,name,startlen);
+			nptr += startlen; *nptr = 0;
+			startlen += matchlen;
+			name += startlen;
+			
+//			printf("partial name [%s]\n",newName);
+			memcpy(nptr,replace,replacelen);
+			nptr += replacelen; *nptr=0;
+
+			u32 finalsize = len-startlen;
+			
+//			printf("name ptr index : [%u]\n",name-nfo.name);
+//			printf("out ptr index : [%u]\n",nptr-newName);
+//			printf("final copie size : %u\n",finalsize);
+//			printf("partial name [%s]\n",newName);
+			memcpy(nptr,name,finalsize);
+			nptr += finalsize; *nptr = 0;
+//			printf("final new name size : %u\n",nptr-newName);
+//			printf("new name : [%s]\n",newName);
+			matchk[nbmatch] = keyCreate(newName,*nfo.type,*nfo.nb,*nfo.ttl,nfo.sizes,nfo.data);
+			free(newName);
+			outk[c] = matchk[nbmatch++];
+		}
+		
+		free(nfo.data);
+	}
+
+//	if(nbmatch) printf("replace [%s] with [%s] in %u keys, %u match.\n",match,replace,nbkey,nbmatch);
+	
+	rddAddKeys(&out,nbkey,outk); free(outk);
+	for(u32 cpt=0;cpt<nbmatch;cpt++) free(matchk[cpt]); free(matchk);
+	free(keys); free(*rdd); *rdd=out;
+	return 1;
+}
+
 int main(int argc,char **argv)
 {	char redisserver[1024] = "127.0.0.1\0";
 	u32  redisport = 6379;
@@ -562,15 +627,18 @@ int main(int argc,char **argv)
 	u32 filternb = 0;
 	char *match[255];	// filter to keep from output
 	u32 matchnb = 0;
+	char *find[255]; // string to find in key names
+	char *replace[255];
+	u32 mvkeynb = 0;
 	char *out = 0;
 	char verbose=0;
 	
 	redisContext *redis = 0;
 	
-	int i=1, filterflag=0; // 0:input, 1:filter, 2:match
+	int i=1, filterflag=0; // 0:input, 1:filter, 2:match, 3:rename
 	while(i < argc)
 	{	if(!strcmp(argv[i],"-h"))
-		{	printf("rdd -- redis database dumper 0.2\n\nusage:\t-h : show this help screen\n"); return 0;
+		{	printf("rdd\t-- redis database dumper 0.3 --\n\t-- © 2012 noferi mickaël (r043v/dph) --\n\t-- noferov@gmail.com -- github.com/r043v/rdd --\n\nusage:\t-h\t\tshow this help screen\n\t-v\t\tincrease verbose (up to 2)\n\t[-i]\t\tfile.rdd &| redis patterns : inputs (will be merged)\n\t-m\t\twillcard match patterns to keep from input\n\t-f\t\twillcard filter patterns to trim from input\n\t-mv\t\trename keys => -mv find replace find2 replace2\n\t-o insert\tinsert output keys in redis\n\t-o delete\tremove output keys from redis\n\t-o file.rdd\tsave output keys into file.rdd\n"); return 0;
 		}
 		
 		if(!strcmp(argv[i],"-s"))
@@ -607,10 +675,15 @@ int main(int argc,char **argv)
 		if(!strcmp(argv[i],"-i")){filterflag=0; i++; continue;}
 		if(!strcmp(argv[i],"-f")){filterflag=1; i++; continue;}
 		if(!strcmp(argv[i],"-m")){filterflag=2; i++; continue;}
+		if(!strcmp(argv[i],"-mv")){filterflag=3; i++; continue;}
 		
 		if(!filterflag)   { input[inputnb++] = argv[i++]; continue; }
 		if(filterflag==1) { filter[filternb++] = argv[i++]; continue; }
 		if(filterflag==2) { match[matchnb++] = argv[i++]; continue; }
+		if(filterflag==3) { find[mvkeynb] = argv[i++];
+				    replace[mvkeynb++] = argv[i++];
+				    continue;
+				  }
 		i++;
 	}
 
@@ -635,6 +708,9 @@ int main(int argc,char **argv)
 
 	if(filternb) rddFilter(&inputrdd,filter,filternb);
 	if(matchnb)  rddMatch(&inputrdd,match,matchnb);
+	
+	for(u32 cpt=0;cpt<mvkeynb;cpt++)
+		rddRename(&inputrdd,find[cpt],replace[cpt]);
 	
 	rddTtl(&inputrdd);
 	

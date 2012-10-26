@@ -1,17 +1,17 @@
--------------------------------------
---- redis dumper --- rdd --- 0.2 ---
--------------------------------------
+---------------------------------------------
+--- redis database dumper --- rdd --- 0.3 ---
+---------------------------------------------
 
-by r043v/dph  ...  noferov@gmail.com  ...  https://github.com/r043v/rdd/
+© 2012 noferi mickaël (r043v/dph)  ...  noferov@gmail.com  ...  https://github.com/r043v/rdd/
 
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
   http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 -------------------------------------
 
-it's an alpha software, use it at your own risk !
+it's a beta software, use it at your own risk !
 
-it does not replace your own rdb file saving, do not rely on this sofware for precious data !
+it does not replace your own rdb file saving, do not rely only on this sofware for precious data !
 
 -------------------------------------
 
@@ -23,6 +23,7 @@ this tool not use .rdb file ! i made my own file format, .rdd
 
 changelog
 
+0.3	add key rename, also fix a small memory leak
 0.2	add ttl support, save ttl with end unix timestamp value, will auto filter expired keys before output them anywhere.
 0.1	memory leak fix
 0.1a	initial release
@@ -32,7 +33,7 @@ changelog
 know bugs ..
 
 not any, but i not made serious test :)
-there are no check test .. so, a bad dump can crash
+there are no check test .. so, a bad dump file can maybe crash
 
 -------------------------------------
 
@@ -47,13 +48,26 @@ usage ..
 
 all arguments are optionals
 
-./rdd [inputs] -f [filters] -m [match filters] -o outputType
+./rdd [inputs] -f [filters] -m [match filters] -mv [find_text replace_text] -o outputType
 
 inputs can be redis keys command filter, or, .rdd files, all specified inputs will be merged
 filters can only be wilcards keys name filters : "*cache*" "*user:???:*", put any filter as you need
 match filters are wilcards too, it specifie keys to keep, you can put multiple match filters
 
 no inputs mean "*" redis keys command filter will be used, so, get all keys
+
+-mv argument
+
+it's for "move", keys rename
+follow mv with pairs of replace text in keys name
+
+-m "my_prefix:" "my_new_prefix:"
+
+you can done some replace at the same time
+
+-m "my_prefix:" "my_new_prefix:" ":user:old_name" ":user:new_name" ":user:" ":web_site_users:"
+
+match and replace are not wildcard, but plain text
 
 output argument
 
@@ -105,7 +119,7 @@ exemple, move some keys from one redis instance to another one
 ./rdd "myprefix:*" -o "keys.rdd" -s "ip of redis instance 1" -p "port of redis instance 1"
 
 // delete all keys from source redis
-./rdd "keys.rdd" -o delete  -s "ip of redis instance 1" -p "port of redis instance 1"
+./rdd "keys.rdd" -o delete -s "ip of redis instance 1" -p "port of redis instance 1"
 
 // filter keys from dump if need, here we delete "cache" temp keys
 ./rdd "keys.rdd" -f "*cache*" -o "keys.rdd"
