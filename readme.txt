@@ -61,11 +61,11 @@ no inputs mean "*" redis keys command filter will be used, so, get all keys
 it's for "move", keys rename
 follow mv with pairs of replace text in keys name
 
--m "my_prefix:" "my_new_prefix:"
+-mv "my_prefix:" "my_new_prefix:"
 
 you can done some replace at the same time
 
--m "my_prefix:" "my_new_prefix:" ":user:old_name" ":user:new_name" ":user:" ":web_site_users:"
+-mv "my_prefix:" "my_new_prefix:" ":user:old_name" ":user:new_name" ":user:" ":web_site_users:"
 
 match and replace are not wildcard, but plain text
 
