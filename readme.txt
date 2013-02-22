@@ -13,6 +13,8 @@ it's a beta software, use it at your own risk !
 
 it does not replace your own rdb file saving, do not rely only on this sofware for precious data !
 
+*** DO NOT USE THIS SOFTWARE IF YOUR KEY NAMES ARE BINARY SAFE ***
+
 -------------------------------------
 
 this tool can be used to dump a redis database, work on dump and put dump into redis
