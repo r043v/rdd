@@ -14,7 +14,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "hiredis.h"
+#include <hiredis/hiredis.h>
 
 #define u32 uint32_t
 #define u16 uint16_t

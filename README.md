@@ -3,6 +3,7 @@
 ---------------------------------------------
 
 © 2012 noferi mickaël (r043v/dph)  ...  noferov@gmail.com  ...  https://github.com/r043v/rdd/
+© 2014 Steve Clement (@SteveClement)  ...  steve_the_at_sign_localhost.lu ... my Fork:  https://github.com/SteveClement/rdd/
 
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
   http://creativecommons.org/licenses/by-nc-sa/3.0/
@@ -34,8 +35,8 @@ changelog
 
 know bugs ..
 
-not any, but i not made serious test :)
-there are no check test .. so, a bad dump file can maybe crash
+not any, but I did not make any serious tests :)
+there are no check tests .. so, a bad dump file can may crash
 
 -------------------------------------
 
@@ -44,11 +45,16 @@ how to compile ..
 you need hiredis library,
 single file mean single line : gcc -std=c99 rdd.c ./libhiredis.a -o rdd
 
+compiling on FreeBSD 10.0
+
+portinstall hiredis
+cc -std=c99 rdd.c -lhiredis -L/usr/local/lib -I/usr/local/include -o rdd
+
 -------------------------------------
 
 usage ..
 
-all arguments are optionals
+all arguments are optional
 
 ./rdd [inputs] -f [filters] -m [match filters] -mv [find_text replace_text] -o outputType
 
@@ -91,7 +97,7 @@ also, default type for no flag input are "input", can also be set with -i
 
 -------------------------------------
 
-exemple ..
+example ..
 
 ./rdd
 will print all keys name
@@ -115,7 +121,7 @@ gat all keys from "mydump.rdd" file, keep only keys name who match "*:user:*" an
 merge "mydump.rdd" keys with redis keys who match "*comment*" and "*article*", remove all keys who match "*cache*", keep only keys match "myprefix*" and save the result as "mydump.rdd"
 
 
-exemple, move some keys from one redis instance to another one
+example, move some keys from one redis instance to another one
 
 // save all keys of your choice
 ./rdd "myprefix:*" -o "keys.rdd" -s "ip of redis instance 1" -p "port of redis instance 1"
