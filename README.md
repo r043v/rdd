@@ -78,20 +78,17 @@ match and replace are not wildcard, but plain text
 
 output argument
 
-`-o "file.rdd"` save keys set into specifyd .rdd file
-`-o "insert"` will write all keys into redis (and before insert delete them)
-`-o "delete"` delete all keys from redis
-
-`-v` will increase verbose mode, can be 0, 1 or 2
-
-`verbose level 1` print output set keys name
-`verbose level 2` print output set keys name and all keys data
-no output (-o) specifyd will made verbose + 1
-
-`-s "127.0.0.1"` specify redis database ip
-`-p "6379"` specify redis port
-`-a "password"` specify redis auth password
-`-d "#database"` specify database number to use
+- `-o "file.rdd"` save keys set into specifyd .rdd file
+- `-o "insert"` will write all keys into redis (and before insert delete them)
+- `-o "delete"` delete all keys from redis
+- `-v` will increase verbose mode, can be 0, 1 or 2
+  - `verbose level 1` print output set keys name
+  - `verbose level 2` print output set keys name and all keys data
+  - no output (-o) specifyd will made verbose + 1
+- `-s "127.0.0.1"` specify redis database ip
+- `-p "6379"` specify redis port
+- `-a "password"` specify redis auth password
+- `-d "#database"` specify database number to use
 
 also, default type for no flag input are "input", can also be set with -i
 
@@ -128,12 +125,12 @@ get all keys from "mydump.rdd" file, keep only keys name who match "*:user:*" an
 ```
 
 
-// merge "mydump.rdd" keys with redis keys who match "*comment*" and "*article*", remove all keys who match "*cache*", keep only keys match "myprefix*" and save the result as "mydump.rdd"
+merge "mydump.rdd" keys with redis keys who match "*comment*" and "*article*", remove all keys who match "*cache*", keep only keys match "myprefix*" and save the result as "mydump.rdd"
 ```
 ./rdd "mydump.rdd" "*comment*" "*article*" -f "*cache*" -m "myprefix*" -o "mydump.rdd"
 ```
 
-### move some keys from one redis instance to another one:
+### Move some keys from one redis instance to another one
 
 save all keys of your choice
 ```
@@ -150,7 +147,7 @@ filter keys from dump if need, here we delete "cache" temp keys
 ./rdd "keys.rdd" -f "*cache*" -o "keys.rdd"
 ```
 
- now save dump into redis instance 2
+now save dump into redis instance 2
 ```
 ./rdd "keys.rdd" -o insert -s "ip of redis instance 2" -p "port of redis instance 2"
 ```
