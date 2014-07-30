@@ -30,7 +30,7 @@ there are no check tests .. so, a bad dump file can may crash
 
 you need hiredis library + gcc (debian/ubuntu):
 ```
-apt-get install libhiredis-dev build-essentials
+apt-get install libhiredis-dev build-essential
 ``` 
 
 to build:
