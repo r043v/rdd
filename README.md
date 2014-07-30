@@ -52,19 +52,18 @@ all arguments are optional
 ./rdd [inputs] -f [filters] -m [match filters] -mv [find_text replace_text] -o outputType -s [hostname] -d [database] -p [port] -a [password]
 ```
 
-inputs can be redis keys command filter, or, .rdd files, all specified inputs will be merged
+inputs can be redis keys command filter, or, .rdd files, all specifyd inputs will be merged
 filters can only be wilcards keys name filters : "*cache*" "*user:???:*", put any filter as you need
-match filters are wilcards too, it specifie keys to keep, you can put multiple match filters
+match filters are wilcards too, it specify keys to keep, you can put multiple match filters
 
 no inputs mean "*" redis keys command filter will be used, so, get all keys
 
 ```
 -mv argument
 ```
-
 it's for "move", keys rename
-follow mv with pairs of replace text in keys name
 
+follow mv with pairs of replace text in keys name
 ```
 -mv "my_prefix:" "my_new_prefix:"
 ```
@@ -79,19 +78,20 @@ match and replace are not wildcard, but plain text
 
 output argument
 
--o "file.rdd" save keys set into specified .rdd file
--o "insert" will write all keys into redis (and before insert delete them)
--o "delete", delete all keys from redis
+`-o "file.rdd"` save keys set into specifyd .rdd file
+`-o "insert"` will write all keys into redis (and before insert delete them)
+`-o "delete"` delete all keys from redis
 
--v will increase verbose mode, can be 0, 1 or 2
-verbose == 1 will print output set keys name
-verbose == 2 will print output set keys name and all keys data
-no output (-o) specified will made verbose++;
+`-v` will increase verbose mode, can be 0, 1 or 2
 
--s "127.0.0.1" specifie redis database ip
--p "6379" specifie redis port
--a "password" specifie redis auth password
--d "#database" specifie database number to use
+`verbose level 1` print output set keys name
+`verbose level 2` print output set keys name and all keys data
+no output (-o) specifyd will made verbose + 1
+
+`-s "127.0.0.1"` specify redis database ip
+`-p "6379"` specify redis port
+`-a "password"` specify redis auth password
+`-d "#database"` specify database number to use
 
 also, default type for no flag input are "input", can also be set with -i
 
