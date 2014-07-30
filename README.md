@@ -1,20 +1,17 @@
----------------------------------------------
---- redis database dumper --- rdd --- 0.3 ---
----------------------------------------------
+### redis database dumper (rdd) 0.3
 
-© 2012 noferi mickaël (r043v/dph)  ...  noferov@gmail.com  ...  https://github.com/r043v/rdd/
-© 2014 Steve Clement (@SteveClement)  ...  steve_the_at_sign_localhost.lu ... my Fork:  https://github.com/SteveClement/rdd/
+© 2012 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd/
 
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
   http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 -------------------------------------
 
-it's a beta software, use it at your own risk !
+It's a beta software, use it at your own risk !
 
-it does not replace your own rdb file saving, do not rely only on this sofware for precious data !
+It does not replace your own rdb file saving, do not rely only on this sofware for precious data !
 
-*** DO NOT USE THIS SOFTWARE IF YOUR KEY NAMES ARE BINARY SAFE ***
+### DO NOT USE THIS SOFTWARE IF YOUR KEY NAMES ARE BINARY SAFE
 
 -------------------------------------
 
@@ -24,39 +21,36 @@ this tool not use .rdb file ! i made my own file format, .rdd
 
 -------------------------------------
 
-changelog
-
-0.3	add key rename, also fix a small memory leak
-0.2	add ttl support, save ttl with end unix timestamp value, will auto filter expired keys before output them anywhere.
-0.1	memory leak fix
-0.1a	initial release
-
--------------------------------------
-
-know bugs ..
+## Know bugs
 
 not any, but I did not make any serious tests :)
 there are no check tests .. so, a bad dump file can may crash
 
--------------------------------------
+## How to compile
 
-how to compile ..
+you need hiredis library + gcc (debian/ubuntu):
+```
+apt-get install libhiredis-dev build-essentials
+``` 
 
-you need hiredis library,
-single file mean single line : gcc -std=c99 rdd.c ./libhiredis.a -o rdd
+to build:
+```
+make
+```
 
 compiling on FreeBSD 10.0
-
+```
 portinstall hiredis
 cc -std=c99 rdd.c -lhiredis -L/usr/local/lib -I/usr/local/include -o rdd
+```
 
--------------------------------------
-
-usage ..
+## Usage
 
 all arguments are optional
 
-./rdd [inputs] -f [filters] -m [match filters] -mv [find_text replace_text] -o outputType
+```
+./rdd [inputs] -f [filters] -m [match filters] -mv [find_text replace_text] -o outputType -s [hostname] -d [database] -p [port] -a [password]
+```
 
 inputs can be redis keys command filter, or, .rdd files, all specified inputs will be merged
 filters can only be wilcards keys name filters : "*cache*" "*user:???:*", put any filter as you need
@@ -64,16 +58,22 @@ match filters are wilcards too, it specifie keys to keep, you can put multiple m
 
 no inputs mean "*" redis keys command filter will be used, so, get all keys
 
+```
 -mv argument
+```
 
 it's for "move", keys rename
 follow mv with pairs of replace text in keys name
 
+```
 -mv "my_prefix:" "my_new_prefix:"
+```
 
 you can done some replace at the same time
 
+```
 -mv "my_prefix:" "my_new_prefix:" ":user:old_name" ":user:new_name" ":user:" ":web_site_users:"
+```
 
 match and replace are not wildcard, but plain text
 
@@ -95,44 +95,62 @@ no output (-o) specified will made verbose++;
 
 also, default type for no flag input are "input", can also be set with -i
 
--------------------------------------
+## Examples
 
-example ..
-
-./rdd
 will print all keys name
+```
+./rdd
+```
 
-./rdd "*user*"
 will print all keys where name match "*user*"
+```
+./rdd "*user*"
+```
 
-./rdd -o "save.rdd"
 save all keys into "save.rdd"
+```
+./rdd -o "save.rdd"
+```
 
-./rdd "*user*" -o "save.rdd"
 will save all keys where name match "*user*" into "save.rdd" file
+```
+./rdd "*user*" -o "save.rdd"
+```
 
-./rdd "myprefix:*" -f "*cache*" -o "mydump.rdd"
 get all "myprefix:*" redis keys, remove "*cache*" keys and save result as "mydump.rdd"
+```
+./rdd "myprefix:*" -f "*cache*" -o "mydump.rdd"
+```
 
+get all keys from "mydump.rdd" file, keep only keys name who match "*:user:*" and save result as "users.rdd"
+```
 ./rdd "mydump.rdd" -m "*:user:*" -o "users.rdd"
-gat all keys from "mydump.rdd" file, keep only keys name who match "*:user:*" and save result as "users.rdd"
+```
 
+
+// merge "mydump.rdd" keys with redis keys who match "*comment*" and "*article*", remove all keys who match "*cache*", keep only keys match "myprefix*" and save the result as "mydump.rdd"
+```
 ./rdd "mydump.rdd" "*comment*" "*article*" -f "*cache*" -m "myprefix*" -o "mydump.rdd"
-merge "mydump.rdd" keys with redis keys who match "*comment*" and "*article*", remove all keys who match "*cache*", keep only keys match "myprefix*" and save the result as "mydump.rdd"
+```
 
+### move some keys from one redis instance to another one:
 
-example, move some keys from one redis instance to another one
-
-// save all keys of your choice
+save all keys of your choice
+```
 ./rdd "myprefix:*" -o "keys.rdd" -s "ip of redis instance 1" -p "port of redis instance 1"
+```
 
-// delete all keys from source redis
+delete all keys from source redis
+```
 ./rdd "keys.rdd" -o delete -s "ip of redis instance 1" -p "port of redis instance 1"
+```
 
-// filter keys from dump if need, here we delete "cache" temp keys
+filter keys from dump if need, here we delete "cache" temp keys
+```
 ./rdd "keys.rdd" -f "*cache*" -o "keys.rdd"
+```
 
-// now save dump into redis instance 2
+ now save dump into redis instance 2
+```
 ./rdd "keys.rdd" -o insert -s "ip of redis instance 2" -p "port of redis instance 2"
-
--------------------------------------
+```
