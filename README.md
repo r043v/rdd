@@ -1,6 +1,6 @@
 ### redis database dumper (rdd) 0.3
 
-© 2012 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd/
+© 2012 ~ 2014 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd/
 
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
   http://creativecommons.org/licenses/by-nc-sa/3.0/
@@ -28,9 +28,16 @@ there are no check tests .. so, a bad dump file can may crash
 
 ## How to compile
 
-you need hiredis library + gcc (debian/ubuntu):
+you need hiredis library + gcc
+
+debian based linux :
 ```
 apt-get install libhiredis-dev build-essential
+``` 
+
+redhat based linux :
+``` 
+yum install hiredis-devel build-essential
 ``` 
 
 to build:
@@ -84,7 +91,7 @@ output argument
 - `-v` will increase verbose mode, can be 0, 1 or 2
   - `verbose level 1` print output set keys name
   - `verbose level 2` print output set keys name and all keys data
-  - no output (-o) specifyd will made verbose + 1
+  - no output (-o) specify will increase verbose
 - `-s "127.0.0.1"` specify redis database ip
 - `-p "6379"` specify redis port
 - `-a "password"` specify redis auth password
