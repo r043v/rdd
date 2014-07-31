@@ -1,12 +1,14 @@
 ### redis database dumper (rdd) 0.3
 
-© 2012 ~ 2014 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd/
+© 2012 ~ 2014 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd
 
 - - - -
 
-© 2014 Steve Clement (@SteveClement) ... steve_the_at_sign_localhost.lu ... https://github.com/SteveClement/rdd/
+© 2014 Steve Clement (@SteveClement) ... steve_the_at_sign_localhost.lu ... https://github.com/SteveClement/rdd
 
 © 2014 Stefan Meinecke https://github.com/smeinecke/rdd
+
+- - - -
 
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
   http://creativecommons.org/licenses/by-nc-sa/3.0/
