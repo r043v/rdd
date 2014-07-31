@@ -23,8 +23,8 @@ this tool not use .rdb file ! i made my own file format, .rdd
 
 ## Know bugs
 
-not any, but I did not make any serious tests :)
-there are no check tests .. so, a bad dump file can may crash
+redis use a dedicated binary safe string library, rdd use classic one,
+so, use binary string for keys names could crash.
 
 ## How to compile
 
