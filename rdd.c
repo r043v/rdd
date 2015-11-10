@@ -1,5 +1,5 @@
 /* rdd - redis database dumper
- * 0.3 release, by noferi mickaël (r043v/dph)
+ * 0.3.1 release, by noferi mickaël (r043v/dph)
  * noferov@gmail.com
  * https://github.com/r043v/rdd/
  *
@@ -638,7 +638,7 @@ int main(int argc,char **argv)
 	int i=1, filterflag=0; // 0:input, 1:filter, 2:match, 3:rename
 	while(i < argc)
 	{	if(!strcmp(argv[i],"-h"))
-		{	printf("rdd\t-- redis database dumper 0.3 --\n\t-- © 2012 noferi mickaël (r043v/dph) --\n\t-- noferov@gmail.com -- github.com/r043v/rdd --\n\nusage:\t-h\t\tshow this help screen\n\t-v\t\tincrease verbose (up to 2)\n\t[-i]\t\tfile.rdd &| redis patterns : inputs (will be merged)\n\t-m\t\twillcard match patterns to keep from input\n\t-f\t\twillcard filter patterns to trim from input\n\t-mv\t\trename keys => -mv find replace find2 replace2\n\t-o insert\tinsert output keys in redis\n\t-o delete\tremove output keys from redis\n\t-o file.rdd\tsave output keys into file.rdd\n\t-s hostname\tdefine redis server hostname\n\t-p portnunumm\tredis server port\n\t-a password\tset authentication password\n\t-d database\tselect redis database\n"); return 0;
+		{	printf("rdd\t-- redis database dumper 0.3.1 --\n\t-- © 2012 noferi mickaël (r043v/dph) --\n\t-- noferov@gmail.com -- github.com/r043v/rdd --\n\nusage:\t-h\t\tshow this help screen\n\t-v\t\tincrease verbose (up to 2)\n\t[-i]\t\tfile.rdd &| redis patterns : inputs (will be merged)\n\t-m\t\twillcard match patterns to keep from input\n\t-f\t\twillcard filter patterns to trim from input\n\t-mv\t\trename keys => -mv find replace find2 replace2\n\t-o insert\tinsert output keys in redis\n\t-o delete\tremove output keys from redis\n\t-o file.rdd\tsave output keys into file.rdd\n\t-s hostname\tdefine redis server hostname\n\t-p portnunumm\tredis server port\n\t-a password\tset authentication password\n\t-d database\tselect redis database\n"); return 0;
 		}
 
 		if(!strcmp(argv[i],"-s"))

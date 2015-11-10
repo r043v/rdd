@@ -1,4 +1,4 @@
-### redis database dumper (rdd) 0.3
+### redis database dumper (rdd) 0.3.1
 
 © 2012 ~ 2014 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd
 
@@ -41,12 +41,12 @@ you need hiredis library + gcc
 debian based linux :
 ```
 apt-get install libhiredis-dev build-essential
-``` 
+```
 
 redhat based linux :
-``` 
+```
 yum install hiredis-devel build-essential
-``` 
+```
 
 to build:
 ```
