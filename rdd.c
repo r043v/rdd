@@ -1,10 +1,10 @@
 /* rdd - redis database dumper
- * 0.3.1 release, by noferi mickaël (r043v/dph)
- * noferov@gmail.com
- * https://github.com/r043v/rdd/
- *
- * This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
- * http://creativecommons.org/licenses/by-nc-sa/3.0/
+ * * 0.3.2
+* https://github.com/r043v/rdd/
+ * author noferi mickaël - r043v/dph - noferov@gmail.com
+* *
+ * This work is licensed under an Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) licence.
+* * https://creativecommons.org/licenses/by-nc-sa/4.0/
  */
 
 #include <stdio.h>
@@ -26,19 +26,19 @@
 
 --- header ---
 
-magic 0x42424242			4
-u32 nbkey				4
+magic 0x42424242					4
+u32 nbkey							4
 
 --- each keys ---
 
-magic 0x4242				2
-u16 type				2
-u32 full size				4
+magic 0x4242						2
+u16 type							2
+u32 full size						4
 u32 ttl end in unix timestamp		4
 
 key name, 0 filled to be aligned	?
-u32 nbresult				4
-data sizes, u32*(nbresult)		4*nb
+u32 nbresult						4
+data sizes, u32*(nbresult)			4*nb
 each data, 0 filled to be aligned	?
 
 */
@@ -530,7 +530,12 @@ void rddPrint(char*rdd,u32 verbose)
 
 void rddRedisConnect(redisContext ** rd, char*server, u32 port, u32 db, char * pass)
 {	struct timeval timeout = { 1, 500000 };
-	*rd = redisConnectWithTimeout(server,port,timeout);
+
+	if( !port )
+		*rd = redisConnectUnix(server);
+	else
+		*rd = redisConnectWithTimeout(server,port,timeout);
+
 	if ((*rd)->err) {
 	    printf("\nredis connection error: %s\n", (*rd)->errstr);
 	    exit(1);
@@ -564,42 +569,29 @@ u32 rddRename(char**rdd,char*match,char*replace)
 
 	for(u32 c=0;c<nbkey;c++)
 	{	keyGetNfo(keys[c],&nfo);
-//		printf("process key [%s] ",nfo.name);
 		char * pos = strstr(nfo.name,match);
 		if(!pos) // not match, simple copie
 		{	outk[c] = keys[c];
-//			printf("not match\n");
 		} else { // match, patch key name
 			char * name = nfo.name;
-//			printf("match\n");
 			u32  len = strlen(name);
-//			printf("name len : %u\n",len);
 			u32 nlen = (len-matchlen)+replacelen;
-//			printf("new name len : %u\n",nlen);
 			char * newName =  (char*)malloc(nlen+1);
-			//if(!newName) { printf("alloc error.\n"); return 0; }
 			char * nptr = newName;
 			u32 startlen = pos-name;
-//			printf("start len : %u, replace len : %u, matchlen : %u\n",startlen,replacelen,matchlen);
 			memcpy(nptr,name,startlen);
 			nptr += startlen; *nptr = 0;
 			startlen += matchlen;
 			name += startlen;
 
-//			printf("partial name [%s]\n",newName);
 			memcpy(nptr,replace,replacelen);
 			nptr += replacelen; *nptr=0;
 
 			u32 finalsize = len-startlen;
 
-//			printf("name ptr index : [%u]\n",name-nfo.name);
-//			printf("out ptr index : [%u]\n",nptr-newName);
-//			printf("final copie size : %u\n",finalsize);
-//			printf("partial name [%s]\n",newName);
 			memcpy(nptr,name,finalsize);
 			nptr += finalsize; *nptr = 0;
-//			printf("final new name size : %u\n",nptr-newName);
-//			printf("new name : [%s]\n",newName);
+
 			matchk[nbmatch] = keyCreate(newName,*nfo.type,*nfo.nb,*nfo.ttl,nfo.sizes,nfo.data);
 			free(newName);
 			outk[c] = matchk[nbmatch++];
@@ -638,7 +630,7 @@ int main(int argc,char **argv)
 	int i=1, filterflag=0; // 0:input, 1:filter, 2:match, 3:rename
 	while(i < argc)
 	{	if(!strcmp(argv[i],"-h"))
-		{	printf("rdd\t-- redis database dumper 0.3.1 --\n\t-- © 2012 noferi mickaël (r043v/dph) --\n\t-- noferov@gmail.com -- github.com/r043v/rdd --\n\nusage:\t-h\t\tshow this help screen\n\t-v\t\tincrease verbose (up to 2)\n\t[-i]\t\tfile.rdd &| redis patterns : inputs (will be merged)\n\t-m\t\twillcard match patterns to keep from input\n\t-f\t\twillcard filter patterns to trim from input\n\t-mv\t\trename keys => -mv find replace find2 replace2\n\t-o insert\tinsert output keys in redis\n\t-o delete\tremove output keys from redis\n\t-o file.rdd\tsave output keys into file.rdd\n\t-s hostname\tdefine redis server hostname\n\t-p portnunumm\tredis server port\n\t-a password\tset authentication password\n\t-d database\tselect redis database\n"); return 0;
+		{	printf("rdd\t-- redis database dumper 0.3.2 --\n\t-- © 2012~2017 noferi mickaël (r043v/dph) --\n\t-- noferov@gmail.com -- github.com/r043v/rdd --\n\nusage:\t-h\t\tshow this help screen\n\t-v\t\tincrease verbose (up to 2)\n\t[-i]\t\tfile.rdd &| redis patterns : inputs (will be merged)\n\t-m\t\twillcard match patterns to keep from input\n\t-f\t\twillcard filter patterns to trim from input\n\t-mv\t\trename keys => -mv find replace find2 replace2\n\t-o insert\tinsert output keys in redis\n\t-o delete\tremove output keys from redis\n\t-o file.rdd\tsave output keys into file.rdd\n\t-s host\t\tredis server host|socket\n\t-p port number\tredis server port, 0 for unix socket\n\t-a password\tset authentication password\n\t-d database\tselect redis database\n"); return 0;
 		}
 
 		if(!strcmp(argv[i],"-s"))

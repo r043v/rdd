@@ -1,23 +1,25 @@
-### redis database dumper (rdd) 0.3.1
+### redis database dumper (rdd) - 0.3.2
 
-© 2012 ~ 2014 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd
+© 2012 ~ 2017 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd
 
 - - - -
+
+### Contributors
 
 © 2014 Steve Clement (@SteveClement) ... steve_the_at_sign_localhost.lu ... https://github.com/SteveClement/rdd
-
 © 2014 Stefan Meinecke https://github.com/smeinecke/rdd
+© 2015 Till Backhaus https://github.com/tback/rdd
 
 - - - -
 
-This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-  http://creativecommons.org/licenses/by-nc-sa/3.0/
+This work is licensed under an Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) licence.
+ https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 -------------------------------------
 
-It's a beta software, use it at your own risk !
+Use this software at your own risk !
 
-It does not replace your own rdb file saving, do not rely only on this sofware for precious data !
+It does not replace your own rdb file saving, do not rely only on this software for precious data !
 
 ### DO NOT USE THIS SOFTWARE IF YOUR KEY NAMES ARE BINARY SAFE
 
@@ -51,6 +53,11 @@ yum install hiredis-devel build-essential
 to build:
 ```
 make
+```
+
+to install:
+```
+make install
 ```
 
 compiling on FreeBSD 10.0
@@ -100,8 +107,8 @@ output argument
   - `verbose level 1` print output set keys name
   - `verbose level 2` print output set keys name and all keys data
   - no output (-o) specify will increase verbose
-- `-s "127.0.0.1"` specify redis database ip
-- `-p "6379"` specify redis port
+- `-s "127.0.0.1"` specify redis database ip or unix socket file
+- `-p "6379"` specify redis port, set it at 0 for unix socket
 - `-a "password"` specify redis auth password
 - `-d "#database"` specify database number to use
 
@@ -138,7 +145,6 @@ get all keys from "mydump.rdd" file, keep only keys name who match "*:user:*" an
 ```
 ./rdd "mydump.rdd" -m "*:user:*" -o "users.rdd"
 ```
-
 
 merge "mydump.rdd" keys with redis keys who match "*comment*" and "*article*", remove all keys who match "*cache*", keep only keys match "myprefix*" and save the result as "mydump.rdd"
 ```
