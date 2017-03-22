@@ -6,9 +6,9 @@
 
 ### Contributors
 
-© 2014 Steve Clement (@SteveClement) ... steve_the_at_sign_localhost.lu ... https://github.com/SteveClement/rdd
-© 2014 Stefan Meinecke https://github.com/smeinecke/rdd
-© 2015 Till Backhaus https://github.com/tback/rdd
+© 2014 Steve Clement (@SteveClement) ... steve_the_at_sign_localhost.lu ... https://github.com/SteveClement/rdd  
+© 2014 Stefan Meinecke https://github.com/smeinecke/rdd  
+© 2015 Till Backhaus https://github.com/tback/rdd  
 
 - - - -
 
