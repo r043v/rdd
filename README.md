@@ -1,6 +1,6 @@
-### redis database dumper (rdd) - 0.3.2
+### redis database dumper (rdd) - 0.4
 
-© 2012 ~ 2017 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd
+© 2012 ~ 2025 noferi mickaël (r043v/dph) / noferov@gmail.com / https://github.com/r043v/rdd
 
 - - - -
 
@@ -21,7 +21,7 @@ Use this software at your own risk !
 
 It does not replace your own rdb file saving, do not rely only on this software for precious data !
 
-### DO NOT USE THIS SOFTWARE IF YOUR KEY NAMES ARE BINARY SAFE
+## DO NOT USE THIS SOFTWARE IF YOUR REDIS KEY NAMES ARE BINARY SAFE
 
 -------------------------------------
 

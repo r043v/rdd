@@ -1,7 +1,7 @@
 /* rdd - redis database dumper
- * * 0.3.2
+ * * 0.4
 * https://github.com/r043v/rdd/
- * author noferi mickaël - r043v/dph - noferov@gmail.com
+ * © 2012~2025 noferi mickaël - r043v/dph - noferov@gmail.com
 * *
  * This work is licensed under an Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) licence.
 * * https://creativecommons.org/licenses/by-nc-sa/4.0/
@@ -91,7 +91,7 @@ u32 getType(char*t) // string, list, set, zset and hash
 		case 's' :
 			if(t[1] == 't') return 0; return 2;
 		break;
-		default : return 255; break;
+		default : printf("unknow key type %s\n",t); return 255; break;
 	}; return 255;
 }
 
@@ -102,7 +102,9 @@ const char * getTypeName(u16*type) // string, list, set, zset and hash
 		case 2: return "set"; break;
 		case 3: return "zset"; break;
 		case 4: return "hash"; break;
-	};		return "unknow";
+	};
+
+	return "unknow";
 }
 
 //wilcard function come from here, http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
@@ -133,13 +135,18 @@ u32 wildMatch(char* pat, char* str)
 	goto loopStart;
 }
 
-u32 rddHasKey(char*rdd,char*name)
-{	u32 *p = (u32*)rdd; if(*p++ != 0x42424242) return 0; u32 nb = *p++;
+u32 rddHasKey(char*rdd,char*name){
+	//printf("enter haskey\n");
+	u32 *p = (u32*)rdd; if(*p++ != 0x42424242) return 0; u32 nb = *p++;
+	//printf("set get %u keys\n",nb);
 	for(u32 c=0;c<nb;c++)
 	{	char *k = (char*)p; k+=12;
+		//printf("check has key %u\n",c);
+		//printf("-%20s-\n",k);
 		if(!strcmp(k,name)) return c;
 		p++; p += ((*p)-4)>>2;
 	}
+	//printf("not found in set\n");
 	return 0xffffffff;
 }
 
@@ -148,6 +155,10 @@ char * keyCreate(char*name,u16 type, u32 nb, u32 ttl, u32*dsize, char**data)
 
 	u32 size = 16+nb*4; // magic,type,size,ttl,nbres,data size
 	u32*sizes = (u32*)malloc((nb+1)*4);
+	if( !sizes ){
+		printf("malloc error in keyCreate\n");
+		return 0;
+	}
 	u32 tmp = strlen(name)+1; tmp = (tmp + (kalign - 1)) & -kalign;
 
 	*sizes = tmp;
@@ -160,12 +171,19 @@ char * keyCreate(char*name,u16 type, u32 nb, u32 ttl, u32*dsize, char**data)
 	}
 
 	char *k = (char*)calloc(1,size);
+	if( !k ){
+		printf("malloc error in keyCreate\n");
+		free(sizes);
+		return 0;
+	}
 	char *p = k;
 	*(u16*)p = 0x4242;
 	*(u16*)(p+2) = type;
 	*(u32*)(p+4) = size;
 	*(u32*)(p+8) = ttl;
-	strcpy(p+12,name);
+//	printf("hey\n");
+	strcpy(p+12,name); // check me for binary string
+//	printf("wut %u\n",strlen(name));
 	p += 12+(*sizes);
 	u32 *p32 = (u32*)p;
 	*p32++ = nb;
@@ -176,11 +194,13 @@ char * keyCreate(char*name,u16 type, u32 nb, u32 ttl, u32*dsize, char**data)
 		p += sizes[c+1];
 	}
 	free(sizes);
+	//printf("create done\n");
 	return k;
 }
 
-u32 keyGetSize(char*k)
-{	if(*(u16*)k != 0x4242) return 0;
+u32 keyGetSize(char*k){
+	if( !k ){ printf("bad key in keyGetSize\n"); return 0; }
+	if(*(u16*)k != 0x4242) return 0;
 	k+=4; return *(u32*)k;
 }
 
@@ -195,6 +215,10 @@ u32 keyGetNfo(char*k,struct keynfo *nfo)
 	nfo->nb = (u32*)(k+12+tmp);
 	nfo->sizes = &(nfo->nb[1]);
 	nfo->data = (char**)malloc((*nfo->nb)*sizeof(char*));
+	if( !nfo->data ){
+		printf("malloc error in keyGetNfo\n");
+		return 0;
+	}
 	char*nfodata = (char*)(nfo->sizes); nfodata += 4*(*nfo->nb);
 	for(u32 c=0;c < *nfo->nb;c++)
 	{	(nfo->data)[c] = nfodata;
@@ -214,8 +238,12 @@ char * rddGoToKey(char*rdd, u32 id)
 char ** rddGetAllKeys(char*rdd, u32*nb)
 {	u32  *p = (u32*)rdd; if(*p++ != 0x42424242) { *nb=0; return 0; } *nb=*p++;
 	char**out = (char**)malloc((*nb)*sizeof(char*));
-	for(u32 c=0;c<*nb;c++)
-	{	out[c] = (char*)p++; p += ((*p)-4)>>2;
+	if( !out ){
+		printf("malloc error in rddGetAllKeys\n");
+		return 0;
+	}
+	for(u32 c=0;c<*nb;c++){
+		out[c] = (char*)p++; p += ((*p)-4)>>2;
 	}
 	return out;
 }
@@ -225,6 +253,10 @@ char ** rddGetKeys(char*rdd, char**filter, u32 nbfilter, u32 method, u32*nb)
 	u32 nbkey;
 	char**allk = rddGetAllKeys(rdd,&nbkey);
 	char**validk = (char**)malloc(nbkey*sizeof(char*));
+	if( !validk ){
+		printf("malloc error in rddGetKeys\n");
+		return 0;
+	}
 	u32 match;
 	*nb=0;
 
@@ -266,6 +298,10 @@ u32 rddTtl(char**rdd)
 	char ** keys = rddGetAllKeys(*rdd,&nbkey);
 	char *out = rddnew();
 	char **validk = (char**)malloc(nbkey*sizeof(char*));
+	if( !validk ){
+		printf("malloc error in rddTtl\n");
+		return 0;
+	}
 	time_t now = time(NULL);
 	struct keynfo nfo;
 	for(u32 c=0;c<nbkey;c++)
@@ -294,14 +330,31 @@ char * rddRedis(redisContext*rd,char*filter)
 	char * rdd = rddnew();
 	u32 nbkey = keys->elements; if(!nbkey) { freeReplyObject(keys); return rdd; }
 
+	//printf("%u keys on %s\n",nbkey,filter);
+
 	u8 *ktype = (u8*)malloc(nbkey);
+	if( !ktype ){
+		printf("malloc error in rddRedis\n");
+		return 0;
+	}
 	time_t *kttl = (time_t*)malloc(nbkey*sizeof(time_t));
+	if( !kttl ){
+		printf("malloc error in rddRedis\n");
+		free(ktype);
+		return 0;
+	}
 	char **rddkeys = (char**)malloc(sizeof(char*)*nbkey);
+	if( !rddkeys ){
+		printf("malloc error in rddRedis\n");
+		free(ktype);
+		free(kttl);
+		return 0;
+	}
 
 	redisReply *reply;
 
-	for(u32 n=0;n<nbkey;n++)
-	{	char*name = keys->element[n]->str;
+	for(u32 n=0;n<nbkey;n++){
+		char*name = keys->element[n]->str;
 		redisAppendCommand(rd,"TYPE %s",name); // get key type
 		redisAppendCommand(rd,"TTL %s",name); // get ttl
 	}
@@ -310,42 +363,76 @@ char * rddRedis(redisContext*rd,char*filter)
 
 	for(u32 n=0;n<nbkey;n++)
 	{	redisGetReply(rd,(void**)&reply); // type
+		//printf("key %u\n",n);
 		u8 t = getType(reply->str); ktype[n] = t;
+		//printf("type %u\n",t);
 		freeReplyObject(reply);
 		redisGetReply(rd,(void**)&reply); // ttl
 		int i = reply->integer;
 		if(i != -1) kttl[n] = now + i; else kttl[n]=0;
+		//printf("ttl %u\n",kttl[n]);
 		freeReplyObject(reply);
 	}
 
 	for(u32 n=0;n<nbkey;n++) redisAppendCommand(rd,redisGetCmd[ktype[n]],keys->element[n]->str); // get data
 
-	for(u32 n=0;n<nbkey;n++)
-	{	redisGetReply(rd,(void**)&reply);
+	u32 outKey = 0 ;
+	for(u32 n=0;n<nbkey;n++){
+		//printf("load key %u\n",n);
+		redisGetReply(rd,(void**)&reply);
+
+		if( reply->type == REDIS_REPLY_ERROR ){
+			printf("redis error, cannot get key %u [%s]\n",n,reply->str);
+			//printf("[%s]",keys->element[n]->str);
+
+			freeReplyObject(reply);
+			continue; // skip key
+		}
+
 		if(reply->type == REDIS_REPLY_STRING)
 		{	u32 datasize = reply->len;
-			rddkeys[n] = keyCreate(keys->element[n]->str,ktype[n],1,kttl[n],&datasize,&reply->str);
+			rddkeys[outKey++] = keyCreate(keys->element[n]->str,ktype[n],1,kttl[n],&datasize,&reply->str);
+			//printf("key %u 0x%08X\n", n, rddkeys[n]);
 		}
 	       else
 		if(reply->type == REDIS_REPLY_ARRAY)
 		{	u32 nbres = reply->elements;
 			char ** data = (char**)malloc(nbres*sizeof(char*));
+			if( !data ){
+				printf("malloc error in rddRedis, key %u\n",n);
+				break ;
+			}
+		
 			u32 *datasize = (u32*)malloc(nbres*4);
+			if( !datasize ){
+				printf("malloc error in rddRedis, key %u\n",n);
+				free(data);
+				break ;
+			}
 
 			for(u32 c=0;c<nbres;c++)
 			{	datasize[c] = reply->element[c]->len;
 				data[c] = reply->element[c]->str;
 			}
 
-			rddkeys[n] = keyCreate(keys->element[n]->str,ktype[n],nbres,kttl[n],datasize,data);
+			rddkeys[outKey++] = keyCreate(keys->element[n]->str,ktype[n],nbres,kttl[n],datasize,data);
+			//printf("key %u %8X\n", n, rddkeys[n]);
 			free(data); free(datasize);
+		}
+			else {
+			printf("unknow redis reply type %u\n",reply->type);
 		}
 		freeReplyObject(reply);
 	}
 
 	freeReplyObject(keys);
 
-	rddAddKeys(&rdd, nbkey, rddkeys);
+	//printf("loaded.\n");
+
+	rddAddKeys(&rdd, outKey, rddkeys);
+
+	//printf("keys added.\n");
+
 	for(u32 n=0;n<nbkey;n++) free(rddkeys[n]); free(rddkeys); free(ktype); free(kttl);
 	return rdd;
 }
@@ -353,8 +440,19 @@ char * rddRedis(redisContext*rd,char*filter)
 void rddRedisDelete(redisContext*rd,char*rdd)
 {	u32 nb=0; char **keys = rddGetAllKeys(rdd,&nb);
 	int argnb = nb+1;
+
 	const char ** cargv = (const char**) malloc( argnb*(sizeof(char*)) );
+	if( !cargv ){
+		printf("malloc error in rddRedisDelete\n");
+		return;
+	}
+
 	size_t *cargl = (size_t*)malloc( argnb*(sizeof(size_t*)) );
+	if( !cargl ){
+		printf("malloc error in rddRedisDelete\n");
+		free( cargv );
+		return;
+	}
 
 	cargv[0] = "DEL";
 	cargl[0] = 3;
@@ -386,7 +484,17 @@ u32 rddRedisInsert(redisContext*rd,char*rdd)
 		int argnb = (*k.nb) + 2;
 
 		const char ** cargv = (const char**) malloc( argnb*(sizeof(char*)) );
+		if( !cargv ){
+			printf("malloc error in rddRedisInsert\n");
+			return 0;
+		}
+
 		size_t *cargl = (size_t*)malloc( argnb*(sizeof(size_t*)) );
+		if( !cargl ){
+			printf("malloc error in rddRedisInsert\n");
+			free( cargv );
+			return 0;
+		}
 
 		cargv[0] = redisSetCmd[*k.type];
 		cargl[0] = strlen(cargv[0]);
@@ -436,21 +544,47 @@ u32 rddRedisInsert(redisContext*rd,char*rdd)
 	return 1;
 }
 
+/*
 char * rddLoad(char*fname)
 {	FILE *f = fopen(fname,"r"); fseek(f,0,SEEK_END); u32 fsize = ftell(f); fseek(f,0,SEEK_SET);
 	void *data = malloc(fsize);
 	if(fread(data,fsize,1,f)!=1) return 0;
 	fclose(f); return (char*)data;
 }
+*/
 
-char * rddnew(void)
-{	u32 *rdd = (u32*)malloc(8);
+char * rddLoad(char*fname){
+    FILE *f = fopen(fname,"r"); fseek(f,0,SEEK_END); u32 fsize = ftell(f); fseek(f,0,SEEK_SET);
+
+    void *data = malloc( fsize );
+    if( !data ){
+        printf("malloc error in rddLoad\n");
+        fclose(f);
+        return 0;
+    }
+
+    if( fread( data, fsize, 1, f ) != 1 ){
+        printf("read error in rddLoad\n");
+        free(data);
+        data = 0;
+    }
+
+    fclose(f); return (char*)data;
+}
+
+char * rddnew(void){
+	u32 *rdd = (u32*)malloc(8);
+	if( !rdd ){
+		printf("malloc error in rddNew, wtf ?\n");
+		return 0;
+	}
+
 	*rdd = 0x42424242; rdd[1]=0;
 	return (char*)rdd;
 }
 
-u32 rddGetSize(char*rdd)
-{	u32  *p = (u32*)rdd; if(*p++ != 0x42424242) return 0;
+u32 rddGetSize(char*rdd){
+	u32  *p = (u32*)rdd; if(*p++ != 0x42424242) return 0;
 	u32 size=8;
 	u32 nbkey = *p++;
 	char *cp = (char*)p;
@@ -472,20 +606,44 @@ u32 rddAddKeys(char**rdd, u32 nbk, char**kkeys)
 {	if(*(u32*)*rdd != 0x42424242) return 0;
 	u32 size = rddGetSize(*rdd);
 	u32 nsize = size;
+	
 	u32*ksize = (u32*)malloc(nbk*4);
+	if( !ksize ){
+		printf("malloc error in rddAddKey\n");
+		return 0;
+	}
+
 	char**keys = (char**)malloc(nbk*sizeof(char*));
+	if( !keys ){
+		printf("malloc error in rddAddKey\n");
+		free( ksize );
+		return 0;
+	}
+
 	u32 nb = 0;
+
+	//printf("check key exist\n");
 
 	for(u32 c=0;c<nbk;c++)
 	{	if(0xffffffff == rddHasKey(*rdd,kkeys[c]+12)) keys[nb++] = kkeys[c];
 	}
 
+	//printf("get keys sizes\n");
+
 	for(u32 c=0;c<nb;c++)
 	{	u32 tmp = keyGetSize(keys[c]);
 		ksize[c] = tmp; nsize += tmp;
+		//printf("key %u, size %u\n",c,tmp);
 	}
 
 	*rdd = (char*)realloc((void*)*rdd,nsize);
+	if( !rdd ){
+		printf("realloc error in rddAddKey\n");
+		free(ksize);
+		free(keys);
+		return 0;
+	}
+
 	*(u32*)((*rdd)+4) += nb; // write new rddkey nb
 	char *p = *rdd; p += size;
 	for(u32 c=0;c<nb;c++)
@@ -564,7 +722,16 @@ u32 rddRename(char**rdd,char*match,char*replace)
 	char ** keys = rddGetAllKeys(*rdd,&nbkey);
 	char *out = rddnew();
 	char **outk = (char**)malloc(nbkey*sizeof(char*));
+	if( !outk ){
+		printf("malloc error in rddRename\n");
+		return 0;
+	}
 	char **matchk = (char**)malloc(nbkey*sizeof(char*));
+	if( !matchk ){
+		printf("malloc error in rddRename\n");
+		free( outk );
+		return 0;
+	}
 	struct keynfo nfo;
 
 	for(u32 c=0;c<nbkey;c++)
@@ -577,6 +744,10 @@ u32 rddRename(char**rdd,char*match,char*replace)
 			u32  len = strlen(name);
 			u32 nlen = (len-matchlen)+replacelen;
 			char * newName =  (char*)malloc(nlen+1);
+			if( !newName ){
+				printf("malloc error in rddRename, key %u %s\n",c,name);
+				break;
+			}
 			char * nptr = newName;
 			u32 startlen = pos-name;
 			memcpy(nptr,name,startlen);
@@ -630,7 +801,7 @@ int main(int argc,char **argv)
 	int i=1, filterflag=0; // 0:input, 1:filter, 2:match, 3:rename
 	while(i < argc)
 	{	if(!strcmp(argv[i],"-h"))
-		{	printf("rdd\t-- redis database dumper 0.3.2 --\n\t-- © 2012~2017 noferi mickaël (r043v/dph) --\n\t-- noferov@gmail.com -- github.com/r043v/rdd --\n\nusage:\t-h\t\tshow this help screen\n\t-v\t\tincrease verbose (up to 2)\n\t[-i]\t\tfile.rdd &| redis patterns : inputs (will be merged)\n\t-m\t\twillcard match patterns to keep from input\n\t-f\t\twillcard filter patterns to trim from input\n\t-mv\t\trename keys => -mv find replace find2 replace2\n\t-o insert\tinsert output keys in redis\n\t-o delete\tremove output keys from redis\n\t-o file.rdd\tsave output keys into file.rdd\n\t-s host\t\tredis server host|socket\n\t-p port number\tredis server port, 0 for unix socket\n\t-a password\tset authentication password\n\t-d database\tselect redis database\n"); return 0;
+		{	printf("rdd\t-- redis database dumper 0.4 --\n\t-- © 2012~2025 noferi mickaël (r043v/dph) --\n\t-- noferov@gmail.com -- github.com/r043v/rdd --\n\nusage:\t-h\t\tshow this help screen\n\t-v\t\tincrease verbose (up to 2)\n\t[-i]\t\tfile.rdd &| redis patterns : inputs (will be merged)\n\t-m\t\twillcard match patterns to keep from input\n\t-f\t\twillcard filter patterns to trim from input\n\t-mv\t\trename keys => -mv find replace find2 replace2\n\t-o insert\tinsert output keys in redis\n\t-o delete\tremove output keys from redis\n\t-o file.rdd\tsave output keys into file.rdd\n\t-s host\t\tredis server host|socket\n\t-p port number\tredis server port, 0 for unix socket\n\t-a password\tset authentication password\n\t-d database\tselect redis database\n"); return 0;
 		}
 
 		if(!strcmp(argv[i],"-s"))
@@ -685,6 +856,8 @@ int main(int argc,char **argv)
 
 	char *inputrdd = rddnew();
 
+	//printf("load inputs ...\n");
+
 	for(u32 cpt=0;cpt<inputnb;cpt++)
 	{	char *rdd;
 		if(NULL == strstr(input[cpt],".rdd")) // redis;
@@ -693,10 +866,15 @@ int main(int argc,char **argv)
 		}
 		else
 		{	rdd = rddLoad(input[cpt]);
-			if(!rdd) { printf("rdd load error on [%s]",input[cpt]); exit(1); }
+			//if(!rdd) { printf("rdd load error on [%s]",input[cpt]); exit(1); }
 		}
+		if(!rdd) { printf("rdd load error on [%s]",input[cpt]); exit(1); }
+		//printf("merge\n");
 		rddMerge(&inputrdd,rdd); free(rdd);
+		//printf("done\n");
 	}
+
+	//printf("loaded\n");
 
 	if(filternb) rddFilter(&inputrdd,filter,filternb);
 	if(matchnb)  rddMatch(&inputrdd,match,matchnb);
